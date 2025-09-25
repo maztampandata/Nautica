@@ -12,14 +12,34 @@
     tr:nth-child(even) { background: #f2f2f2; }
     .filter { text-align: center; margin: 20px 0; }
     select { padding: 8px 12px; font-size: 16px; }
+
+    /* Pagination */
     .pagination { margin-top: 15px; text-align: center; }
     .pagination button {
-      margin: 0 3px; padding: 6px 10px;
-      border: 1px solid #ccc; background: #fff;
-      cursor: pointer; border-radius: 4px;
+      margin: 0 3px;
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #555;              /* warna default */
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: 500;
+      transition: all 0.2s ease;
     }
-    .pagination button.active { background: #333; color: #fff; font-weight: bold; }
-    .pagination span { margin: 0 5px; color: #666; font-size: 14px; }
+    .pagination button:hover {
+      color: #007bff;           /* warna saat hover */
+      border-color: #007bff;
+    }
+    .pagination button.active {
+      background: #007bff;
+      color: #fff;              /* warna halaman aktif */
+      font-weight: bold;
+    }
+    .pagination span {
+      margin: 0 5px;
+      color: #666;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
