@@ -98,6 +98,17 @@
         padding: 8px 12px;
         font-size: 16px;
       }
+      button {
+        padding: 5px 10px;
+        border: none;
+        background: #222;
+        color: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #444;
+      }
       .footer {
         margin-top: 40px;
         text-align: center;
@@ -162,6 +173,7 @@
           grouped[prx.country].push(prx);
         });
 
+        // isi dropdown filter
         const select = document.getElementById("countryFilter");
         Object.keys(grouped).forEach((c) => {
           const opt = document.createElement("option");
@@ -170,25 +182,32 @@
           select.appendChild(opt);
         });
 
+        // render tabel
         const container = document.getElementById("proxyContainer");
         for (const [country, proxies] of Object.entries(grouped)) {
           const div = document.createElement("div");
           div.className = "country-block";
           div.dataset.country = country;
           div.innerHTML = `
-          <h2>${country}</h2>
-          <table>
-            <tr><th>IP</th><th>Port</th><th>ORG</th></tr>
-            ${proxies
-              .map(
-                (p) =>
-                  `<tr><td>${p.prxIP}</td><td>${p.prxPort}</td><td>${p.org}</td></tr>`
-              )
-              .join("")}
-          </table>`;
+            <h2>${country}</h2>
+            <table>
+              <tr><th>IP</th><th>Port</th><th>ORG</th><th>Action</th></tr>
+              ${proxies
+                .map(
+                  (p) =>
+                    `<tr>
+                       <td>${p.prxIP}</td>
+                       <td>${p.prxPort}</td>
+                       <td>${p.org}</td>
+                       <td><button onclick="openProxy('${p.prxIP}','${p.prxPort}','${p.org}')">Open</button></td>
+                     </tr>`
+                )
+                .join("")}
+            </table>`;
           container.appendChild(div);
         }
 
+        // filter by country
         select.addEventListener("change", () => {
           const selected = select.value;
           document.querySelectorAll(".country-block").forEach((block) => {
@@ -198,6 +217,51 @@
                 : "none";
           });
         });
+      }
+
+      function openProxy(ip, port, org) {
+        const win = window.open("", "_blank");
+        win.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Proxy Info</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+              h1 { color: #333; }
+              .box {
+                background: white; padding: 20px; border-radius: 8px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                max-width: 400px; margin: auto;
+              }
+              p { font-size: 16px; }
+              .ping { color: green; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="box">
+              <h1>Proxy Info</h1>
+              <p><b>IP:</b> ${ip}</p>
+              <p><b>Port:</b> ${port}</p>
+              <p><b>Organization:</b> ${org}</p>
+              <p><b>Ping:</b> <span class="ping" id="ping">Testing...</span></p>
+            </div>
+            <script>
+              async function testPing() {
+                const start = Date.now();
+                try {
+                  await fetch("https://${ip}:${port}", { mode: "no-cors" });
+                  document.getElementById("ping").textContent = (Date.now() - start) + " ms";
+                } catch (e) {
+                  document.getElementById("ping").textContent = "Timeout/Blocked";
+                }
+              }
+              testPing();
+            <\/script>
+          </body>
+          </html>
+        `);
+        win.document.close();
       }
 
       loadProxies();

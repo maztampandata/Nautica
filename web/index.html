@@ -163,6 +163,17 @@
         document.body.classList.toggle("collapsed");
       }
 
+      async function updatePing(prxIP, prxPort, elId) {
+        try {
+          const res = await fetch(`/check?target=${prxIP}:${prxPort}`);
+          const data = await res.json();
+          document.getElementById(elId).textContent =
+            data.ping || data.status || "OK";
+        } catch (e) {
+          document.getElementById(elId).textContent = "Fail";
+        }
+      }
+
       async function loadProxies() {
         const res = await fetch("/api/v1/sub?format=json");
         const data = await res.json();
@@ -191,20 +202,26 @@
           div.innerHTML = `
             <h2>${country}</h2>
             <table>
-              <tr><th>IP</th><th>Port</th><th>ORG</th><th>Action</th></tr>
+              <tr><th>IP</th><th>Port</th><th>ORG</th><th>Ping</th><th>Action</th></tr>
               ${proxies
                 .map(
-                  (p) =>
-                    `<tr>
+                  (p, i) =>
+                    `<tr id="row-${country}-${i}">
                        <td>${p.prxIP}</td>
                        <td>${p.prxPort}</td>
                        <td>${p.org}</td>
+                       <td id="ping-${country}-${i}">Loading...</td>
                        <td><button onclick="openProxy('${p.prxIP}','${p.prxPort}','${p.org}')">Open</button></td>
                      </tr>`
                 )
                 .join("")}
             </table>`;
           container.appendChild(div);
+
+          // cek ping setelah render
+          proxies.forEach((p, i) => {
+            updatePing(p.prxIP, p.prxPort, `ping-${country}-${i}`);
+          });
         }
 
         // filter by country
