@@ -135,13 +135,43 @@ export default {
       
 
 if (url.pathname === "/sub") {
-  if (url.pathname === "/sub") {
-      return env.ASSETS.fetch(request); // Serve index.html
+      const html = await fetch(
+        "https://github.com/maztampandata/Nautica/raw/refs/heads/main/web/index.html"
+      );
+      return new Response(await html.text(), {
+        headers: { "content-type": "text/html; charset=UTF-8" },
+      });
     }
-  return new Response(await html.text(), {
-    headers: { "content-type": "text/html; charset=UTF-8" }
-  });
-}
+      // API endpoint
+    if (url.pathname.startsWith("/api/v1/sub")) {
+      const prxList = await getPrxList();
+
+      if (url.searchParams.get("format") === "json") {
+        return new Response(JSON.stringify(prxList), {
+          headers: {
+            "content-type": "application/json",
+            ...CORS_HEADER_OPTIONS,
+          },
+        });
+      }
+
+      // default: raw
+      const raw = prxList
+        .map((p) => `${p.prxIP}:${p.prxPort} # ${p.country} ${p.org}`)
+        .join("\n");
+      return new Response(raw, {
+        headers: {
+          "content-type": "text/plain",
+          ...CORS_HEADER_OPTIONS,
+        },
+      });
+    }
+    
+    
+    
+    
+    
+    
   else if (url.pathname.startsWith("/check")) {
         const target = url.searchParams.get("target").split(":");
         const result = await checkPrxHealth(target[0], target[1] || "443");
@@ -153,8 +183,8 @@ if (url.pathname === "/sub") {
             "Content-Type": "application/json",
           },
         });
-      } else if (url.pathname.startsWith("/api/v1")) {
-        const apiPath = url.pathname.replace("/api/v1", "");
+      } else if (url.pathname.startsWith("/ap/v1")) {
+        const apiPath = url.pathname.replace("/ap/v1", "");
 
         if (apiPath.startsWith("/sub")) {
           const filterCC = url.searchParams.get("cc")?.split(",") || [];

@@ -8,3 +8,5 @@ enabled = true
 
 [observability.logs]
 enabled = true
+[site]
+bucket = "./web"
