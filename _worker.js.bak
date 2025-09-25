@@ -132,7 +132,7 @@ export default {
         }
       }
 
-      import indexHtml from "./web/index.html";
+      
 
 if (url.pathname === "/sub") {
   const html = await fetch("https://raw.githubusercontent.com/maztampandata/Nautica/refs/heads/main/web/index.html");

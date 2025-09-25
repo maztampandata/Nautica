@@ -135,7 +135,9 @@ export default {
       
 
 if (url.pathname === "/sub") {
-  const html = await fetch("https://raw.githubusercontent.com/maztampandata/Nautica/refs/heads/main/web/index.html");
+  if (url.pathname === "/sub") {
+      return env.ASSETS.fetch(request); // Serve index.html
+    }
   return new Response(await html.text(), {
     headers: { "content-type": "text/html; charset=UTF-8" }
   });
