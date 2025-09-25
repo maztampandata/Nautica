@@ -138,9 +138,7 @@ if (url.pathname.startsWith("/sub")) {
   return new Response(indexHtml, {
     headers: { "content-type": "text/html; charset=UTF-8" },
   });
-}
-
- else if (url.pathname.startsWith("/check")) {
+}  else if (url.pathname.startsWith("/check")) {
         const target = url.searchParams.get("target").split(":");
         const result = await checkPrxHealth(target[0], target[1] || "443");
 

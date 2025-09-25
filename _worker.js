@@ -134,11 +134,13 @@ export default {
 
       import indexHtml from "./web/index.html";
 
-if (url.pathname.startsWith("/sub")) {
-  return new Response(indexHtml, {
-    headers: { "content-type": "text/html; charset=UTF-8" },
+if (url.pathname === "/sub") {
+  const html = await fetch("https://raw.githubusercontent.com/maztampandata/Nautica/refs/heads/main/web/index.html");
+  return new Response(await html.text(), {
+    headers: { "content-type": "text/html; charset=UTF-8" }
   });
-}  else if (url.pathname.startsWith("/check")) {
+}
+  else if (url.pathname.startsWith("/check")) {
         const target = url.searchParams.get("target").split(":");
         const result = await checkPrxHealth(target[0], target[1] || "443");
 
