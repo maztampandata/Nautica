@@ -7,7 +7,6 @@ let APP_DOMAIN = "";
 let prxIP = "";
 let cachedPrxList = [];
 
-
 // Constant
 const horse = "dHJvamFu";
 const flash = "dm1lc3M=";
