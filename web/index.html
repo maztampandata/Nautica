@@ -41,6 +41,11 @@
       .close:hover { color: #000; }
       .ping { color: green; font-weight: bold; }
       @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+      /* Pagination */
+      .pagination { text-align: center; margin-top: 15px; }
+      .pagination button { margin: 0 3px; padding: 6px 12px; }
+      .pagination button.active { background: #444; }
     </style>
   </head>
   <body>
@@ -80,6 +85,10 @@
     </div>
 
     <script>
+      let allProxies = [];
+      let currentPage = 1;
+      const pageSize = 10;
+
       function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("closed");
         document.body.classList.toggle("collapsed");
@@ -96,6 +105,77 @@
         } catch (e) {
           document.getElementById(elId).textContent = "Timeout";
         }
+      }
+
+      function renderTable(proxies) {
+        const container = document.getElementById("proxyContainer");
+        container.innerHTML = "";
+
+        if (proxies.length === 0) {
+          container.innerHTML = "<p>No proxies found.</p>";
+          return;
+        }
+
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        const pageData = proxies.slice(start, end);
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <tr><th>IP</th><th>Port</th><th>ORG</th><th>Country</th><th>Ping</th><th>Action</th></tr>
+          ${pageData.map((p, i) => `
+            <tr id="row-${i}">
+              <td>${p.prxIP}</td>
+              <td>${p.prxPort}</td>
+              <td>${p.org}</td>
+              <td>${p.country}</td>
+              <td id="ping-${i}">Loading...</td>
+              <td><button onclick="openProxy('${p.prxIP}','${p.prxPort}','${p.org}')">Open</button></td>
+            </tr>`).join("")}
+        `;
+        container.appendChild(table);
+
+        // cek ping
+        pageData.forEach((p, i) => {
+          updatePing(p.prxIP, p.prxPort, `ping-${i}`);
+        });
+
+        // pagination control
+        renderPagination(proxies.length);
+      }
+
+      function renderPagination(totalItems) {
+        const container = document.getElementById("proxyContainer");
+        const totalPages = Math.ceil(totalItems / pageSize);
+
+        if (totalPages <= 1) return;
+
+        const nav = document.createElement("div");
+        nav.className = "pagination";
+
+        if (currentPage > 1) {
+          const prev = document.createElement("button");
+          prev.textContent = "Previous";
+          prev.onclick = () => { currentPage--; renderTable(allProxies); };
+          nav.appendChild(prev);
+        }
+
+        for (let i = 1; i <= totalPages; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          if (i === currentPage) btn.classList.add("active");
+          btn.onclick = () => { currentPage = i; renderTable(allProxies); };
+          nav.appendChild(btn);
+        }
+
+        if (currentPage < totalPages) {
+          const next = document.createElement("button");
+          next.textContent = "Next";
+          next.onclick = () => { currentPage++; renderTable(allProxies); };
+          nav.appendChild(next);
+        }
+
+        container.appendChild(nav);
       }
 
       async function loadProxies() {
@@ -117,46 +197,19 @@
           select.appendChild(opt);
         });
 
-        // render tabel
-        const container = document.getElementById("proxyContainer");
-        for (const [country, proxies] of Object.entries(grouped)) {
-          const div = document.createElement("div");
-          div.className = "country-block";
-          div.dataset.country = country;
-          div.innerHTML = `
-            <h2>${country}</h2>
-            <table>
-              <tr><th>IP</th><th>Port</th><th>ORG</th><th>Ping</th><th>Action</th></tr>
-              ${proxies
-                .map(
-                  (p, i) =>
-                    `<tr id="row-${country}-${i}">
-                       <td>${p.prxIP}</td>
-                       <td>${p.prxPort}</td>
-                       <td>${p.org}</td>
-                       <td id="ping-${country}-${i}">Loading...</td>
-                       <td><button onclick="openProxy('${p.prxIP}','${p.prxPort}','${p.org}')">Open</button></td>
-                     </tr>`
-                )
-                .join("")}
-            </table>`;
-          container.appendChild(div);
-
-          // cek ping setelah render
-          proxies.forEach((p, i) => {
-            updatePing(p.prxIP, p.prxPort, `ping-${country}-${i}`);
-          });
-        }
+        allProxies = data;
+        renderTable(allProxies);
 
         // filter by country
         select.addEventListener("change", () => {
           const selected = select.value;
-          document.querySelectorAll(".country-block").forEach((block) => {
-            block.style.display =
-              selected === "all" || block.dataset.country === selected
-                ? "block"
-                : "none";
-          });
+          if (selected === "all") {
+            allProxies = data;
+          } else {
+            allProxies = grouped[selected] || [];
+          }
+          currentPage = 1;
+          renderTable(allProxies);
         });
       }
 
@@ -166,10 +219,8 @@
         document.getElementById("modal-org").textContent = org;
         document.getElementById("modal-ping").textContent = "Checking...";
 
-        // tampilkan modal
         document.getElementById("proxyModal").style.display = "block";
 
-        // fetch ping
         const start = Date.now();
         try {
           const res = await fetch(`/check?target=${ip}:${port}`);
