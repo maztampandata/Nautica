@@ -5,139 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Proxy List</title>
     <style>
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #f9f9f9;
-        color: #333;
-      }
-      .sidebar {
-        height: 100%;
-        width: 240px;
-        position: fixed;
-        top: 0;
-        left: 0;
-        background-color: #222;
-        padding-top: 20px;
-        transition: 0.3s;
-        overflow-x: hidden;
-      }
-      .sidebar.closed {
-        width: 0;
-        padding: 0;
-      }
-      .logo {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 20px;
-      }
-      .logo img {
-        width: 100px;
-        border-radius: 50%;
-        border: 2px solid #fff;
-      }
-      .sidebar h2 {
-        color: #fff;
-        text-align: center;
-        margin-bottom: 20px;
-        font-size: 18px;
-      }
-      .sidebar a {
-        padding: 12px 20px;
-        text-decoration: none;
-        font-size: 16px;
-        color: #bbb;
-        display: block;
-        transition: 0.3s;
-      }
-      .sidebar a:hover {
-        background-color: #575757;
-        color: #fff;
-      }
-      .content {
-        margin-left: 260px;
-        padding: 20px;
-        transition: 0.3s;
-      }
-      .collapsed .content {
-        margin-left: 20px;
-      }
-      h1 {
-        text-align: center;
-        margin-bottom: 10px;
-        font-size: 28px;
-        color: #222;
-      }
-      h2 {
-        margin-top: 30px;
-        color: #444;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-      }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: center;
-      }
-      th {
-        background: #333;
-        color: #fff;
-      }
-      tr:nth-child(even) {
-        background: #f2f2f2;
-      }
-      .filter {
-        text-align: center;
-        margin: 20px 0;
-      }
-      select {
-        padding: 8px 12px;
-        font-size: 16px;
-      }
-      button {
-        padding: 5px 10px;
-        border: none;
-        background: #222;
-        color: #fff;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      button:hover {
-        background: #444;
-      }
-      .footer {
-        margin-top: 40px;
-        text-align: center;
-        font-size: 13px;
-        color: #666;
-      }
-      .toggle-btn {
-        position: fixed;
-        top: 15px;
-        left: 15px;
-        background: #222;
-        color: #fff;
-        border: none;
-        padding: 10px 15px;
-        cursor: pointer;
-        font-size: 16px;
-        border-radius: 4px;
-        z-index: 1000;
-      }
+      body { margin: 0; font-family: Arial, sans-serif; background: #f9f9f9; color: #333; }
+      .sidebar { height: 100%; width: 240px; position: fixed; top: 0; left: 0; background-color: #222;
+        padding-top: 20px; transition: 0.3s; overflow-x: hidden; }
+      .sidebar.closed { width: 0; padding: 0; }
+      .logo { display: flex; justify-content: center; margin-bottom: 20px; }
+      .logo img { width: 100px; border-radius: 50%; border: 2px solid #fff; }
+      .sidebar h2 { color: #fff; text-align: center; margin-bottom: 20px; font-size: 18px; }
+      .sidebar a { padding: 12px 20px; text-decoration: none; font-size: 16px; color: #bbb; display: block; transition: 0.3s; }
+      .sidebar a:hover { background-color: #575757; color: #fff; }
+      .content { margin-left: 260px; padding: 20px; transition: 0.3s; }
+      .collapsed .content { margin-left: 20px; }
+      h1 { text-align: center; margin-bottom: 10px; font-size: 28px; color: #222; }
+      h2 { margin-top: 30px; color: #444; }
+      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+      th { background: #333; color: #fff; }
+      tr:nth-child(even) { background: #f2f2f2; }
+      .filter { text-align: center; margin: 20px 0; }
+      select { padding: 8px 12px; font-size: 16px; }
+      button { padding: 5px 10px; border: none; background: #222; color: #fff; border-radius: 4px; cursor: pointer; }
+      button:hover { background: #444; }
+      .footer { margin-top: 40px; text-align: center; font-size: 13px; color: #666; }
+      .toggle-btn { position: fixed; top: 15px; left: 15px; background: #222; color: #fff; border: none;
+        padding: 10px 15px; cursor: pointer; font-size: 16px; border-radius: 4px; z-index: 1000; }
     </style>
   </head>
   <body>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
     <div class="sidebar" id="sidebar">
       <div class="logo">
-        <img
-          src="https://avatars.githubusercontent.com/u/9919?s=200&v=4"
-          alt="Logo"
-        />
+        <img src="https://avatars.githubusercontent.com/u/9919?s=200&v=4" alt="Logo"/>
       </div>
       <h2>Navigation</h2>
       <a href="/">🏠 Home</a>
@@ -236,7 +134,7 @@
         });
       }
 
-      function openProxy(ip, port, org) {
+      async function openProxy(ip, port, org) {
         const win = window.open("", "_blank");
         win.document.write(`
           <!DOCTYPE html>
@@ -261,19 +159,19 @@
               <p><b>IP:</b> ${ip}</p>
               <p><b>Port:</b> ${port}</p>
               <p><b>Organization:</b> ${org}</p>
-              <p><b>Ping:</b> <span class="ping" id="ping">Testing...</span></p>
+              <p><b>Ping:</b> <span class="ping" id="ping">Checking...</span></p>
             </div>
             <script>
-              async function testPing() {
-                const start = Date.now();
+              async function fetchPing() {
                 try {
-                  await fetch("https://${ip}:${port}", { mode: "no-cors" });
-                  document.getElementById("ping").textContent = (Date.now() - start) + " ms";
-                } catch (e) {
-                  document.getElementById("ping").textContent = "Timeout/Blocked";
+                  const res = await fetch('/check?target=${ip}:${port}');
+                  const data = await res.json();
+                  document.getElementById('ping').textContent = data.ping || data.status || "OK";
+                } catch(e) {
+                  document.getElementById('ping').textContent = "Fail";
                 }
               }
-              testPing();
+              fetchPing();
             <\/script>
           </body>
           </html>
