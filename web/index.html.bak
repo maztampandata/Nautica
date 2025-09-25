@@ -135,49 +135,55 @@
       }
 
       async function openProxy(ip, port, org) {
-        const win = window.open("", "_blank");
-        win.document.write(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Proxy Info</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
-              h1 { color: #333; }
-              .box {
-                background: white; padding: 20px; border-radius: 8px;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-                max-width: 400px; margin: auto;
-              }
-              p { font-size: 16px; }
-              .ping { color: green; font-weight: bold; }
-            </style>
-          </head>
-          <body>
-            <div class="box">
-              <h1>Proxy Info</h1>
-              <p><b>IP:</b> ${ip}</p>
-              <p><b>Port:</b> ${port}</p>
-              <p><b>Organization:</b> ${org}</p>
-              <p><b>Ping:</b> <span class="ping" id="ping">Checking...</span></p>
-            </div>
-            <script>
-              async function fetchPing() {
-                try {
-                  const res = await fetch('/check?target=${ip}:${port}');
-                  const data = await res.json();
-                  document.getElementById('ping').textContent = data.ping || data.status || "OK";
-                } catch(e) {
-                  document.getElementById('ping').textContent = "Fail";
-                }
-              }
-              fetchPing();
-            <\/script>
-          </body>
-          </html>
-        `);
-        win.document.close();
-      }
+  const win = window.open("", "_blank");
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Proxy Info</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+        h1 { color: #333; }
+        .box {
+          background: white; padding: 20px; border-radius: 8px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+          max-width: 400px; margin: auto;
+        }
+        p { font-size: 16px; }
+        .ping { color: green; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <div class="box">
+        <h1>Proxy Info</h1>
+        <p><b>IP:</b> ${ip}</p>
+        <p><b>Port:</b> ${port}</p>
+        <p><b>Organization:</b> ${org}</p>
+        <p><b>Ping:</b> <span class="ping" id="ping">Checking...</span></p>
+      </div>
+      <script>
+        async function fetchPing() {
+          const start = Date.now();
+          try {
+            const res = await fetch('/check?target=${ip}:${port}');
+            const data = await res.json();
+            let ping = data.ping;
+            if (!ping) {
+              ping = (Date.now() - start) + " ms";
+            }
+            document.getElementById('ping').textContent = ping;
+          } catch(e) {
+            document.getElementById('ping').textContent = "Timeout";
+          }
+        }
+        fetchPing();
+      <\/script>
+    </body>
+    </html>
+  `);
+  win.document.close();
+}
+
 
       loadProxies();
     </script>
