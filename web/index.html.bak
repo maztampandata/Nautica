@@ -41,7 +41,37 @@
       .close:hover { color: #000; }
       .ping { color: green; font-weight: bold; }
       @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    </style>
+
+<style>
+  /* Pagination */
+  .pagination { margin-top: 15px; text-align: center; }
+  .pagination button {
+    margin: 0 3px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #555;              /* warna default nomor halaman */
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  .pagination button:hover {
+    color: #007bff;           /* warna saat hover */
+    border-color: #007bff;
+  }
+  .pagination button.active {
+    background: #007bff;      /* background biru untuk halaman aktif */
+    color: #fff;              /* teks putih */
+    font-weight: bold;
+  }
+  .pagination span {
+    margin: 0 5px;
+    color: #999;
+    font-size: 14px;
+  }
+</style>
+
   </head>
   <body>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
@@ -80,6 +110,10 @@
     </div>
 
     <script>
+      let allProxies = [];
+      let currentPage = 1;
+      const pageSize = 15;
+
       function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("closed");
         document.body.classList.toggle("collapsed");
@@ -98,9 +132,80 @@
         }
       }
 
+      function renderTable(proxies) {
+        const container = document.getElementById("proxyContainer");
+        container.innerHTML = "";
+
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        const pageData = proxies.slice(start, end);
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <tr><th>IP</th><th>Port</th><th>ORG</th><th>Country</th><th>Ping</th><th>Action</th></tr>
+          ${pageData.map((p,i)=>`
+            <tr>
+              <td>${p.prxIP}</td>
+              <td>${p.prxPort}</td>
+              <td>${p.org}</td>
+              <td>${p.country}</td>
+              <td id="ping-${i}">Loading...</td>
+              <td><button onclick="openProxy('${p.prxIP}','${p.prxPort}','${p.org}')">Open</button></td>
+            </tr>`).join("")}
+        `;
+        container.appendChild(table);
+
+        pageData.forEach((p, i) => updatePing(p.prxIP, p.prxPort, `ping-${i}`));
+        renderPagination(proxies.length);
+      }
+
+      function renderPagination(totalItems) {
+        const container = document.getElementById("proxyContainer");
+        const totalPages = Math.ceil(totalItems / pageSize);
+        if (totalPages <= 1) return;
+
+        const nav = document.createElement("div");
+        nav.className = "pagination";
+
+        if (currentPage > 1) {
+          const prev = document.createElement("button");
+          prev.textContent = "Prev";
+          prev.onclick = () => { currentPage--; renderTable(allProxies); };
+          nav.appendChild(prev);
+        }
+
+        const maxVisible = 3;
+        let addedLeftDots = false;
+        let addedRightDots = false;
+
+        for (let i = 1; i <= totalPages; i++) {
+          if (i === 1 || i === totalPages || (i >= currentPage - maxVisible && i <= currentPage + maxVisible)) {
+            const btn = document.createElement("button");
+            btn.textContent = i;
+            if (i === currentPage) btn.classList.add("active");
+            btn.onclick = () => { currentPage = i; renderTable(allProxies); };
+            nav.appendChild(btn);
+          } else if (i < currentPage && !addedLeftDots) {
+            const span = document.createElement("span"); span.textContent = "..."; nav.appendChild(span); addedLeftDots = true;
+          } else if (i > currentPage && !addedRightDots) {
+            const span = document.createElement("span"); span.textContent = "..."; nav.appendChild(span); addedRightDots = true;
+          }
+        }
+
+        if (currentPage < totalPages) {
+          const next = document.createElement("button");
+          next.textContent = "Next";
+          next.onclick = () => { currentPage++; renderTable(allProxies); };
+          nav.appendChild(next);
+        }
+
+        container.appendChild(nav);
+      }
+
       async function loadProxies() {
         const res = await fetch("/api/v1/sub?format=json");
         const data = await res.json();
+        allProxies = data;
 
         const grouped = {};
         data.forEach((prx) => {
@@ -108,7 +213,6 @@
           grouped[prx.country].push(prx);
         });
 
-        // isi dropdown filter
         const select = document.getElementById("countryFilter");
         Object.keys(grouped).forEach((c) => {
           const opt = document.createElement("option");
@@ -117,46 +221,17 @@
           select.appendChild(opt);
         });
 
-        // render tabel
-        const container = document.getElementById("proxyContainer");
-        for (const [country, proxies] of Object.entries(grouped)) {
-          const div = document.createElement("div");
-          div.className = "country-block";
-          div.dataset.country = country;
-          div.innerHTML = `
-            <h2>${country}</h2>
-            <table>
-              <tr><th>IP</th><th>Port</th><th>ORG</th><th>Ping</th><th>Action</th></tr>
-              ${proxies
-                .map(
-                  (p, i) =>
-                    `<tr id="row-${country}-${i}">
-                       <td>${p.prxIP}</td>
-                       <td>${p.prxPort}</td>
-                       <td>${p.org}</td>
-                       <td id="ping-${country}-${i}">Loading...</td>
-                       <td><button onclick="openProxy('${p.prxIP}','${p.prxPort}','${p.org}')">Open</button></td>
-                     </tr>`
-                )
-                .join("")}
-            </table>`;
-          container.appendChild(div);
+        renderTable(allProxies);
 
-          // cek ping setelah render
-          proxies.forEach((p, i) => {
-            updatePing(p.prxIP, p.prxPort, `ping-${country}-${i}`);
-          });
-        }
-
-        // filter by country
         select.addEventListener("change", () => {
           const selected = select.value;
-          document.querySelectorAll(".country-block").forEach((block) => {
-            block.style.display =
-              selected === "all" || block.dataset.country === selected
-                ? "block"
-                : "none";
-          });
+          if (selected === "all") {
+            allProxies = data;
+          } else {
+            allProxies = grouped[selected] || [];
+          }
+          currentPage = 1;
+          renderTable(allProxies);
         });
       }
 
@@ -165,11 +240,8 @@
         document.getElementById("modal-port").textContent = port;
         document.getElementById("modal-org").textContent = org;
         document.getElementById("modal-ping").textContent = "Checking...";
-
-        // tampilkan modal
         document.getElementById("proxyModal").style.display = "block";
 
-        // fetch ping
         const start = Date.now();
         try {
           const res = await fetch(`/check?target=${ip}:${port}`);
